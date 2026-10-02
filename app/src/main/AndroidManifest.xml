@@ -30,6 +30,9 @@
         <activity android:name=".AddTaskActivity"
             android:exported="false" />
 
+        <activity android:name=".DangKyActivity"
+            android:exported="false" />
+
 <!--        <activity-->
 <!--            android:name=".tinh_tong_activity"-->
 <!--            android:exported="false"-->

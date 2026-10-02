@@ -15,7 +15,10 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,10 +47,10 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<String> arrTasks = new ArrayList<>();
         ArrayList<String> arrTasksSapToi = new ArrayList<>();
 
-        arrTasks.add("Đi học");
-        arrTasks.add("Làm bài tập Android");
-        arrTasksSapToi.add("Học từ vựng Tiếng Anh");
-        arrTasksSapToi.add("Đi tập thể thao");
+        arrTasks.add("Đi học (08:00)");
+        arrTasks.add("Làm bài tập Android (14:00)");
+        arrTasksSapToi.add("Học từ vựng Tiếng Anh (Ngày mai)");
+        arrTasksSapToi.add("Đi tập thể thao (Cuối tuần)");
 
         ArrayAdapter<String> adap = new ArrayAdapter<>(this, R.layout.item_task, R.id.tv_task_title, arrTasks);
         ArrayAdapter<String> adapSapToi = new ArrayAdapter<>(this, R.layout.item_task, R.id.tv_task_title, arrTasksSapToi);
@@ -60,10 +63,26 @@ public class MainActivity extends AppCompatActivity {
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         String newTask = result.getData().getStringExtra("new Task");
+                        String taskTime = result.getData().getStringExtra("task Time");
+
                         if (newTask != null && !newTask.isEmpty()) {
-                            arrTasks.add(newTask);
-                            adap.notifyDataSetChanged();
-                            Toast.makeText(MainActivity.this, "Đã thêm task: " + newTask, Toast.LENGTH_SHORT).show();
+                            String displayText = newTask;
+                            if (taskTime != null && !taskTime.isEmpty()) {
+                                displayText += " (" + taskTime + ")";
+                            }
+
+                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                            String todayStr = sdf.format(new Date());
+
+                            if (taskTime == null || taskTime.isEmpty() || taskTime.contains(todayStr)) {
+                                arrTasks.add(displayText);
+                                adap.notifyDataSetChanged();
+                                Toast.makeText(MainActivity.this, "Đã thêm vào Công việc hôm nay", Toast.LENGTH_SHORT).show();
+                            } else {
+                                arrTasksSapToi.add(displayText);
+                                adapSapToi.notifyDataSetChanged();
+                                Toast.makeText(MainActivity.this, "Đã thêm vào Công việc sắp tới", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
                 }
