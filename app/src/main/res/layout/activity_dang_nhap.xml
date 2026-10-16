@@ -15,7 +15,8 @@
         android:text="ĐĂNG NHẬP"
         android:textColor="@android:color/holo_blue_dark"
         android:textSize="26sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -62,17 +63,6 @@
         android:text="ĐĂNG NHẬP"
         android:textColor="@android:color/white"
         android:textSize="16sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tv_go_to_register"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:padding="8dp"
-        android:text="Chưa có tài khoản? Đăng ký ngay"
-        android:textColor="@android:color/holo_blue_dark"
         android:textStyle="bold" />
 
 </LinearLayout>

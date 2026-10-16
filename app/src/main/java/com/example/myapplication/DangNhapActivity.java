@@ -1,11 +1,9 @@
 package com.example.myapplication;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -19,7 +17,8 @@ public class DangNhapActivity extends AppCompatActivity {
 
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
-    private TextView tvGoToRegister;
+    private static final String HARDCODED_USER = "admin";
+    private static final String HARDCODED_PASS = "123456";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,12 +35,6 @@ public class DangNhapActivity extends AppCompatActivity {
         edtUsername = findViewById(R.id.username);
         edtPassword = findViewById(R.id.password);
         btnLogin = findViewById(R.id.btn_log_in);
-        tvGoToRegister = findViewById(R.id.tv_go_to_register);
-
-        tvGoToRegister.setOnClickListener(v -> {
-            Intent i = new Intent(DangNhapActivity.this, DangKyActivity.class);
-            startActivity(i);
-        });
 
         btnLogin.setOnClickListener(v -> {
             String inputUser = edtUsername.getText().toString().trim();
@@ -49,36 +42,26 @@ public class DangNhapActivity extends AppCompatActivity {
 
             if (inputUser.isEmpty()) {
                 edtUsername.setError("Vui lòng nhập tên đăng nhập");
+                Toast.makeText(DangNhapActivity.this, "Vui lòng nhập tên đăng nhập", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (inputPass.isEmpty()) {
                 edtPassword.setError("Vui lòng nhập mật khẩu");
+                Toast.makeText(DangNhapActivity.this, "Vui lòng nhập mật khẩu", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            SharedPreferences pref = getSharedPreferences("UserAccount", MODE_PRIVATE);
-            String savedUser = pref.getString("username", null);
-            String savedPassHash = pref.getString("password", null);
+            if (HARDCODED_USER.equals(inputUser) && HARDCODED_PASS.equals(inputPass)) {
+                Toast.makeText(DangNhapActivity.this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
 
-            if (savedUser == null || savedPassHash == null) {
-                Toast.makeText(this, "Chưa có tài khoản! Vui lòng bấm 'Đăng ký ngay' ở bên dưới.", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            String inputPassHash = PasswordUtils.hashPassword(inputPass);
-
-            if (inputUser.equals(savedUser) && inputPassHash.equals(savedPassHash)) {
-                Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-
-                Intent i = new Intent(DangNhapActivity.this, MainActivity.class);
-                i.putExtra("username", inputUser);
-                startActivity(i);
+                Intent intent = new Intent(DangNhapActivity.this, MainActivity.class);
+                intent.putExtra("username", inputUser);
+                startActivity(intent);
                 finish();
             } else {
-                Toast.makeText(this, "Tên đăng nhập hoặc Mật khẩu không chính xác!", Toast.LENGTH_LONG).show();
+                Toast.makeText(DangNhapActivity.this, "Sai tên đăng nhập hoặc mật khẩu", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 }

@@ -2,7 +2,7 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,12 +15,23 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
+
+    private TextView tvTotalAmount;
+    private ListView lvExpense;
+    private Button btnAddExpense;
+
+    private ArrayList<Expense> listExpense;
+    private ExpenseAdapter expenseAdapter;
+
+    private ActivityResultLauncher<Intent> addExpenseLauncher;
+    private ActivityResultLauncher<Intent> detailExpenseLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,64 +45,77 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        TextView tvWelcome = findViewById(R.id.user_name);
+        tvTotalAmount = findViewById(R.id.tv_total_amount);
+        lvExpense = findViewById(R.id.lv_expense);
+        btnAddExpense = findViewById(R.id.btn_add_expense);
 
-        Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("username")) {
-            String username = intent.getStringExtra("username");
-            tvWelcome.setText("Hi: " + username);
+        listExpense = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        String todayStr = sdf.format(new Date());
+
+        listExpense.add(new Expense("Ăn sáng", 30000, "Ăn uống", todayStr, "Bánh mì + Cà phê"));
+        listExpense.add(new Expense("Đổ xăng", 50000, "Đi lại", todayStr, "Xăng RON 95"));
+        listExpense.add(new Expense("Mua sách", 120000, "Học tập", todayStr, "Sách Lập trình Android"));
+
+        expenseAdapter = new ExpenseAdapter(this, listExpense);
+        lvExpense.setAdapter(expenseAdapter);
+
+        double total = 0;
+        for (Expense expense : listExpense) {
+            total += expense.getAmount();
         }
+        DecimalFormat decimalFormat = new DecimalFormat("#,###");
+        tvTotalAmount.setText(decimalFormat.format(total) + " đ");
 
-        ListView lvTask = findViewById(R.id.lv_task);
-        ListView lvTaskSapToi = findViewById(R.id.lv_task_sap_toi);
-        ArrayList<String> arrTasks = new ArrayList<>();
-        ArrayList<String> arrTasksSapToi = new ArrayList<>();
-
-        arrTasks.add("Đi học (08:00)");
-        arrTasks.add("Làm bài tập Android (14:00)");
-        arrTasksSapToi.add("Học từ vựng Tiếng Anh (Ngày mai)");
-        arrTasksSapToi.add("Đi tập thể thao (Cuối tuần)");
-
-        ArrayAdapter<String> adap = new ArrayAdapter<>(this, R.layout.item_task, R.id.tv_task_title, arrTasks);
-        ArrayAdapter<String> adapSapToi = new ArrayAdapter<>(this, R.layout.item_task, R.id.tv_task_title, arrTasksSapToi);
-
-        lvTask.setAdapter(adap);
-        lvTaskSapToi.setAdapter(adapSapToi);
-
-        ActivityResultLauncher<Intent> addTaskLauncher = registerForActivityResult(
+        addExpenseLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        String newTask = result.getData().getStringExtra("new Task");
-                        String taskTime = result.getData().getStringExtra("task Time");
-
-                        if (newTask != null && !newTask.isEmpty()) {
-                            String displayText = newTask;
-                            if (taskTime != null && !taskTime.isEmpty()) {
-                                displayText += " (" + taskTime + ")";
+                        Expense newExpense = (Expense) result.getData().getSerializableExtra("newExpense");
+                        if (newExpense != null) {
+                            listExpense.add(newExpense);
+                            expenseAdapter.notifyDataSetChanged();
+                            double currentTotal = 0;
+                            for (Expense e : listExpense) {
+                                currentTotal += e.getAmount();
                             }
-
-                            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                            String todayStr = sdf.format(new Date());
-
-                            if (taskTime == null || taskTime.isEmpty() || taskTime.contains(todayStr)) {
-                                arrTasks.add(displayText);
-                                adap.notifyDataSetChanged();
-                                Toast.makeText(MainActivity.this, "Đã thêm vào Công việc hôm nay", Toast.LENGTH_SHORT).show();
-                            } else {
-                                arrTasksSapToi.add(displayText);
-                                adapSapToi.notifyDataSetChanged();
-                                Toast.makeText(MainActivity.this, "Đã thêm vào Công việc sắp tới", Toast.LENGTH_SHORT).show();
-                            }
+                            tvTotalAmount.setText(decimalFormat.format(currentTotal) + " đ");
+                            Toast.makeText(MainActivity.this, "Đã thêm khoản chi mới", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
         );
 
-        TextView tvAddTask = findViewById(R.id.btn_add_task);
-        tvAddTask.setOnClickListener(v -> {
-            Intent i = new Intent(MainActivity.this, AddTaskActivity.class);
-            addTaskLauncher.launch(i);
+        detailExpenseLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        int deletePosition = result.getData().getIntExtra("deletePosition", -1);
+                        if (deletePosition >= 0 && deletePosition < listExpense.size()) {
+                            listExpense.remove(deletePosition);
+                            expenseAdapter.notifyDataSetChanged();
+                            double currentTotal = 0;
+                            for (Expense e : listExpense) {
+                                currentTotal += e.getAmount();
+                            }
+                            tvTotalAmount.setText(decimalFormat.format(currentTotal) + " đ");
+                            Toast.makeText(MainActivity.this, "Đã xóa khoản chi", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
+
+        btnAddExpense.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AddExpenseActivity.class);
+            addExpenseLauncher.launch(intent);
+        });
+
+        lvExpense.setOnItemClickListener((parent, view, position, id) -> {
+            Expense selectedExpense = listExpense.get(position);
+            Intent intent = new Intent(MainActivity.this, ExpenseDetailActivity.class);
+            intent.putExtra("selectedExpense", selectedExpense);
+            intent.putExtra("position", position);
+            detailExpenseLauncher.launch(intent);
         });
     }
 }
